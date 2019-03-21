@@ -1,21 +1,21 @@
+# vim: set fileencoding=utf-8 :
 """
 .. module:: htmldiff.htmldiff
 :synopsis: Utility to do inline diffs of html files.
 .. moduleauthor:: Ian Bicking, Richard Cyganiak, Brant Watson
 """
 # Standard Imports
-from __future__ import print_function
-import sys
-import re
-import logging
-from copy import copy
-from difflib import SequenceMatcher
 
-# Six
-import six
+from __future__ import print_function
+from difflib import SequenceMatcher
+from copy import copy
+
+import codecs
+import re
+import sys
 
 # Boltons
-from boltons.ioutils import SpooledBytesIO
+from boltons.ioutils import SpooledStringIO
 
 # Constants
 COMMENT_RE = re.compile(r'<!--.*?-->', re.S)
@@ -23,22 +23,12 @@ TAG_RE = re.compile(r'<script.*?>.*?</script>|<.*?>', re.S)
 HEAD_RE = re.compile(r'<\s*head\s*>', re.S | re.I)
 WS_RE = re.compile(r'^([ \n\r\t]|&nbsp;)+$')
 WORD_RE = re.compile(
-    r'([^ \n\r\t,.&;/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;/#=<>()-])'
+    ur'''([^ \n\r\t,.&;:!?"«»/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;:!?"«»/#=<>()-])'''
 )
 
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
-
-
-def utf8_encode(val):
-    """Return a string in bytes; use utf-8 for unicode strings."""
-    if isinstance(val, six.text_type):
-        return val.encode('utf-8')
-    elif isinstance(val, six.binary_type):
-        return val
-    else:
-        raise TypeError('{} is not a unicode or str object'.format(val))
 
 
 class TagIter(object):
@@ -78,8 +68,8 @@ class HTMLMatcher(SequenceMatcher):
     """SequenceMatcher for HTML data."""
 
     start_insert_text = '<span class="htmldiff-insert">'
-    end_span_text = '</span>'
     start_delete_text = '<span class="htmldiff-delete">'
+    end_span_text = '</span>'
     stylesheet = (
             '.htmldiff-insert { background-color: #AFA; }\n'
             '.htmldiff-delete { background-color: #F88; }\n'
@@ -104,7 +94,7 @@ class HTMLMatcher(SequenceMatcher):
         opcodes = self.get_opcodes()
         a = self.a
         b = self.b
-        out = SpooledBytesIO()
+        out = SpooledStringIO()
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'equal':
                 for item in a[i1:i2]:
@@ -142,35 +132,35 @@ class HTMLMatcher(SequenceMatcher):
         text = []
         for item in lst:
             if item.startswith('<'):
-                self.out_delete(''.join(text), out)
+                self.out_delete(u''.join(text), out)
                 text = []
             else:
                 text.append(item)
-        self.out_delete(''.join(text), out)
+        self.out_delete(u''.join(text), out)
 
     def text_insert(self, lst, out):
         text = []
         for item in lst:
             if item.startswith('<'):
-                self.out_insert(''.join(text), out)
+                self.out_insert(u''.join(text), out)
                 text = []
                 out.write(item)
             else:
                 text.append(item)
-        self.out_insert(''.join(text), out)
+        self.out_insert(u''.join(text), out)
 
     def out_delete(self, s, out):
         if not s.strip():
             val = s
         else:
-            val = ''.join((self.start_delete_text, s, self.end_span_text))
+            val = u''.join((self.start_delete_text, s, self.end_span_text))
         out.write(val)
 
     def out_insert(self, s, out):
         if not s.strip():
             val = s
         else:
-            val = ''.join((self.start_insert_text, s, self.end_span_text))
+            val = u''.join((self.start_insert_text, s, self.end_span_text))
         out.write(val)
 
     def insert_stylesheet(self, html, stylesheet=None):
@@ -208,9 +198,6 @@ def diff_strings(orig, new):
     :param new: new string for comparision against original string
     :returns: string containing diffed html
     """
-    # Make sure we are dealing with bytes...
-    orig = utf8_encode(orig)
-    new = utf8_encode(new)
     h = HTMLMatcher(orig, new)
     return h.diff_html(True)
 
@@ -227,11 +214,11 @@ def diff_files(initial_path, new_path):
     :returns: string containing diffed html from initial_path and new_path
     """
     # Open the files
-    with open(initial_path) as f:
-        source1 = COMMENT_RE.sub('', f.read())
+    with codecs.open(initial_path, encoding='UTF-8') as f:
+        source1 = COMMENT_RE.sub(u'', f.read())
 
-    with open(new_path) as f:
-        source2 = COMMENT_RE.sub('', f.read())
+    with codecs.open(new_path, encoding='UTF-8') as f:
+        source2 = COMMENT_RE.sub(u'', f.read())
 
     return diff_strings(source1, source2)
 

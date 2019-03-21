@@ -5,11 +5,13 @@ Command-line entry point
 """
 # Standard
 import argparse
+import codecs
 import os
 import os.path
 import pkg_resources
 import sys
 import time
+import traceback
 
 # Project
 from htmldiff.lib import diff_files, eprint
@@ -63,20 +65,20 @@ def diff():
     eprint('Diffing files...')
     try:
         diffed_html = diff_files(input_file1, input_file2)
-    except Exception as e:
-        eprint(e, '\nDiff process exited with an error\n')
+    except Exception:
+        traceback.print_exc()
+        eprint('\nDiff process exited with an error\n')
         sys.exit(1)
 
     if output_file is None:
         sys.stdout.write(diffed_html)
     else:
         try:
-            with open(output_file, 'w') as f:
-                f.seek(0)
-                f.truncate()
+            with codecs.open(output_file, 'w', encoding='UTF-8') as f:
                 f.write(diffed_html)
-        except Exception as e:
-            eprint(e, '\nUnable to write diff to {0}\n'.format(output_file))
+        except Exception:
+            traceback.print_exc()
+            eprint('\nUnable to write diff to {0}\n'.format(output_file))
             sys.exit(1)
 
 def main():
