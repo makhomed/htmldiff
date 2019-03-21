@@ -4,6 +4,8 @@
 .. moduleauthor:: Ian Bicking, Richard Cyganiak, Brant Watson
 """
 # Standard Imports
+from __future__ import print_function
+import sys
 import re
 import logging
 from copy import copy
@@ -24,7 +26,9 @@ WORD_RE = re.compile(
     r'([^ \n\r\t,.&;/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;/#=<>()-])'
 )
 
-LOG = logging.getLogger(__name__)
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 def utf8_encode(val):
@@ -87,14 +91,12 @@ class HTMLMatcher(SequenceMatcher):
         )
 
     def __init__(self, source1, source2):
-        LOG.debug('Initializing HTMLMatcher...')
         SequenceMatcher.__init__(self, lambda x: False, source1, source2, False)
 
     def set_seqs(self, a, b):
         SequenceMatcher.set_seqs(self, self.split_html(a), self.split_html(b))
 
     def split_html(self, t):
-        LOG.debug('Splitting html into tag pieces and words')
         result = []
         for item in TagIter(t):
             if item.startswith('<'):
@@ -109,7 +111,6 @@ class HTMLMatcher(SequenceMatcher):
         b = self.b
         out = SpooledBytesIO()
         for tag, i1, i2, j1, j2 in opcodes:
-            LOG.debug('Processing opcodes for tag %s', tag)
             if tag == 'equal':
                 for item in a[i1:i2]:
                     out.write(item)
@@ -131,7 +132,6 @@ class HTMLMatcher(SequenceMatcher):
         return html
 
     def is_invisible_change(self, seq1, seq2):
-        LOG.debug('Checking if change is visible...')
         if len(seq1) != len(seq2):
             return False
         for i in range(0, len(seq1)):
@@ -192,7 +192,6 @@ class HTMLMatcher(SequenceMatcher):
         """
         if not stylesheet:
             stylesheet = self.stylesheet
-        LOG.debug('Inserting stylesheet...')
         match = HEAD_RE.search(html)
         pos = match.end() if match else 0
         return ''.join((
@@ -217,7 +216,6 @@ def diff_strings(orig, new):
     # Make sure we are dealing with bytes...
     orig = utf8_encode(orig)
     new = utf8_encode(new)
-    LOG.debug('Beginning to diff strings...')
     h = HTMLMatcher(orig, new)
     return h.diff_html(True)
 
@@ -235,11 +233,9 @@ def diff_files(initial_path, new_path):
     """
     # Open the files
     with open(initial_path) as f:
-        LOG.debug('Reading file: {0}'.format(initial_path))
         source1 = COMMENT_RE.sub('', f.read())
 
     with open(new_path) as f:
-        LOG.debug('Reading file: {0}'.format(new_path))
         source2 = COMMENT_RE.sub('', f.read())
 
     return diff_strings(source1, source2)

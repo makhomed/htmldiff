@@ -41,8 +41,6 @@ With custom output file::
 
 All options:
 
- * -o --output-file OUTPUT_FILE [Optional] Specify a custom output file
- * -l --log-level (DEBUG,INFO,WARNING,ERROR,CRITICAL)
- * -L --log-file Location to place logging output
- * -v --version Print the application version and exit
- * -h --help Print command line help
+ * -h print command line help
+ * -v print application version and exit
+ * -o OUTPUT_FILE Specify a custom output file

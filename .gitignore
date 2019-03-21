@@ -14,5 +14,3 @@ SOURCES
 BUILDROOT
 .vagrant
 .env*
-src/appendage/appendage_proj/local_settings.py
-node_modules
