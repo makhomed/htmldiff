@@ -77,18 +77,13 @@ class TagIter(object):
 class HTMLMatcher(SequenceMatcher):
     """SequenceMatcher for HTML data."""
 
-    start_insert_text = '<span class="insert">'
+    start_insert_text = '<span class="htmldiff-insert">'
     end_span_text = '</span>'
-    start_delete_text = '<span class="delete">'
+    start_delete_text = '<span class="htmldiff-delete">'
     stylesheet = (
-            '.insert {\n\tbackground-color: #AFA\n}\n'
-            '.delete {\n'
-            '\tbackground-color: #F88;\n'
-            '\ttext-decoration: line-through;\n'
-            '}\n'
-            '.tagInsert {\n\tbackground-color: #070;\n\tcolor: #FFF\n}\n'
-            '.tagDelete {\n\tbackground-color: #700;\n\tcolor: #FFF\n}\n'
-        )
+            '.htmldiff-insert { background-color: #AFA; }\n'
+            '.htmldiff-delete { background-color: #F88; }\n'
+    )
 
     def __init__(self, source1, source2):
         SequenceMatcher.__init__(self, lambda x: False, source1, source2, False)
