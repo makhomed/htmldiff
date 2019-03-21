@@ -4,7 +4,7 @@ setup(
     name="htmldiff",
     version="1.0.0.dev7",
     author="Ian Bicking - https://github.com/ianb",
-    description=("Utility to create html diffs"),
+    description=("Tool for diffing html files"),
     packages=find_packages('src'),
     package_dir={"": "src"},
     install_requires=["boltons>=17.1.0", "six"],
