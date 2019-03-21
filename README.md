@@ -3,7 +3,7 @@ htmldiff
 HTML Diffing utility.
 
 - Original is from [Ian Bicking](https://github.com/ianb)
-- Updates and improvements from [Richard Cyganiak] (https://github.com/cygri)
+- Updates and improvements from [Richard Cyganiak](https://github.com/cygri)
 - Refactored for use with setup tools by [Brant Watson](https://github.com/induane)
 - Modified by [Gena Makhomed](https://github.com/makhomed)
 
