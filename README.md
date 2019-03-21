@@ -11,19 +11,19 @@ License: MIT
 
 Installation
 ============
-To build a source package::
+To build a source package:
 
     $ python setup.py sdist
 
-To install into your current environment::
+To install into your current environment:
 
     $ python setup.py install
 
-Or via pip::
+Or via pip:
 
     $ pip install .
 
-Pip may also be used to install a built package::
+Pip may also be used to install a built package:
 
     $ pip install htmldiff-1.0.0.dev7.tar.gz
 
@@ -31,17 +31,17 @@ Pip may also be used to install a built package::
 Usage
 =====
 
-To produce a diff of two html files::
+To produce a diff of two html files:
 
     $ htmldiff file1.html file2.html > diff_file.html
 
-With custom output file::
+With custom output file:
 
     $ htmldiff file1.html file2.html -o diff_file.html
 
 All options:
 
- * -h print command line help
+ * -h print command line help and exit
  * -v print application version and exit
- * -o OUTPUT_FILE specify a custom output file
+ * -o OUTPUT_FILE write to given output file instead of stdout
 

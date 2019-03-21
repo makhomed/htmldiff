@@ -37,7 +37,7 @@ def diff():
         dest='version',
         action='version',
         version=pkg_version,
-        help='display the version number'
+        help='show application version and exit'
     )
     parser.add_argument(
         '-o',
