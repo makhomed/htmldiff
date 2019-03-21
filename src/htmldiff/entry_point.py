@@ -43,15 +43,7 @@ def diff():
         help='[OPTIONAL] Write to given output file instead of stdout'
     )
     parser.add_argument(
-        '-a',
-        '--accurate-mode',
-        help='Use accurate mode instead of risky mode',
-        dest='accurate_mode',
-        default=False,
-        action='store_true'
-    )
-    parser.add_argument(
-        '-V',
+        '-v',
         '--version',
         dest='version',
         action='version',
@@ -78,7 +70,6 @@ def diff():
     input_file1 = abspath(parsed_args.INPUT_FILE1)
     input_file2 = abspath(parsed_args.INPUT_FILE2)
     output_file = abspath(parsed_args.out_fn) if parsed_args.out_fn else None
-    accurate_mode = parsed_args.accurate_mode
 
     if not os.path.exists(input_file1):
         LOG.error('Could not find: {0}'.format(input_file1))
@@ -91,14 +82,9 @@ def diff():
     LOG.debug('File 1: {0}'.format(input_file1))
     LOG.debug('File 2: {0}'.format(input_file2))
 
-    if parsed_args.accurate_mode:
-        LOG.debug("Using 'Accurate' mode")
-    else:
-        LOG.debug("Using 'Risky' mode")
-
     LOG.info('Diffing files...')
     try:
-        diffed_html = diff_files(input_file1, input_file2, accurate_mode)
+        diffed_html = diff_files(input_file1, input_file2)
     except Exception:
         LOG.exception('Diff process exited with an error')
         sys.exit(1)

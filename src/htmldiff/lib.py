@@ -4,6 +4,7 @@
 .. moduleauthor:: Ian Bicking, Richard Cyganiak, Brant Watson
 """
 # Standard Imports
+import re
 import logging
 from copy import copy
 from difflib import SequenceMatcher
@@ -14,8 +15,14 @@ import six
 # Boltons
 from boltons.ioutils import SpooledBytesIO
 
-# Project
-from htmldiff import constants
+# Constants
+COMMENT_RE = re.compile(r'<!--.*?-->', re.S)
+TAG_RE = re.compile(r'<script.*?>.*?</script>|<.*?>', re.S)
+HEAD_RE = re.compile(r'<\s*head\s*>', re.S | re.I)
+WS_RE = re.compile(r'^([ \n\r\t]|&nbsp;)+$')
+WORD_RE = re.compile(
+    r'([^ \n\r\t,.&;/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;/#=<>()-])'
+)
 
 LOG = logging.getLogger(__name__)
 
@@ -28,17 +35,6 @@ def utf8_encode(val):
         return val
     else:
         raise TypeError('{} is not a unicode or str object'.format(val))
-
-
-def is_junk(x):
-    """
-    Used for the faster but less accurate mode.
-
-    :type x: string
-    :param x: string to match against
-    :returns: regex matched or lowercased x
-    """
-    return constants.WS_RE.match(x) or x.lower() in constants.STOPWORDS
 
 
 class TagIter(object):
@@ -60,7 +56,7 @@ class TagIter(object):
         if self.end_reached:
             raise StopIteration
 
-        match = constants.TAG_RE.search(self.html_string, pos=self.pos)
+        match = TAG_RE.search(self.html_string, pos=self.pos)
         if not match:
             self.end_reached = True
             return self.html_string[self.pos:]
@@ -90,14 +86,9 @@ class HTMLMatcher(SequenceMatcher):
             '.tagDelete {\n\tbackground-color: #700;\n\tcolor: #FFF\n}\n'
         )
 
-    def __init__(self, source1, source2, accurate_mode):
+    def __init__(self, source1, source2):
         LOG.debug('Initializing HTMLMatcher...')
-        if accurate_mode:
-            LOG.debug('Using accurate mode')
-            SequenceMatcher.__init__(self, lambda x: False, source1, source2, False)
-        else:
-            LOG.debug('Using fast mode')
-            SequenceMatcher.__init__(self, is_junk, source1, source2, False)
+        SequenceMatcher.__init__(self, lambda x: False, source1, source2, False)
 
     def set_seqs(self, a, b):
         SequenceMatcher.set_seqs(self, self.split_html(a), self.split_html(b))
@@ -109,7 +100,7 @@ class HTMLMatcher(SequenceMatcher):
             if item.startswith('<'):
                 result.append(item)
             else:
-                result.extend(constants.WORD_RE.findall(item))
+                result.extend(WORD_RE.findall(item))
         return result
 
     def diff_html(self, insert_stylesheet=True):
@@ -146,8 +137,7 @@ class HTMLMatcher(SequenceMatcher):
         for i in range(0, len(seq1)):
             if seq1[i][0] == '<' and seq2[i][0] == '<':
                 continue
-            if all((constants.WS_RE.match(seq1[i]),
-                    constants.WS_RE.match(seq2[i]))):
+            if all((WS_RE.match(seq1[i]), WS_RE.match(seq2[i]))):
                 continue
             if seq1[i] != seq2[i]:
                 return False
@@ -203,7 +193,7 @@ class HTMLMatcher(SequenceMatcher):
         if not stylesheet:
             stylesheet = self.stylesheet
         LOG.debug('Inserting stylesheet...')
-        match = constants.HEAD_RE.search(html)
+        match = HEAD_RE.search(html)
         pos = match.end() if match else 0
         return ''.join((
             html[:pos],
@@ -214,7 +204,7 @@ class HTMLMatcher(SequenceMatcher):
         ))
 
 
-def diff_strings(orig, new, accurate_mode):
+def diff_strings(orig, new):
     """
     Given two strings of html, return a diffed string.
 
@@ -222,19 +212,17 @@ def diff_strings(orig, new, accurate_mode):
     :param orig: original string for comparison
     :type new: string
     :param new: new string for comparision against original string
-    :type accurate_moode: boolean
-    :param accurate_moode: use accurate mode or not
     :returns: string containing diffed html
     """
     # Make sure we are dealing with bytes...
     orig = utf8_encode(orig)
     new = utf8_encode(new)
     LOG.debug('Beginning to diff strings...')
-    h = HTMLMatcher(orig, new, accurate_mode)
+    h = HTMLMatcher(orig, new)
     return h.diff_html(True)
 
 
-def diff_files(initial_path, new_path, accurate_mode):
+def diff_files(initial_path, new_path):
     """
     Given two files, open them to variables and pass them to diff_strings
     for diffing.
@@ -243,18 +231,16 @@ def diff_files(initial_path, new_path, accurate_mode):
     :param initial_path: initial file to diff against
     :type new_path: object
     :param new_path: new file to compare to f1
-    :type accurate_mode: boolean
-    :param accurate_mode: use accurate mode or not
     :returns: string containing diffed html from initial_path and new_path
     """
     # Open the files
     with open(initial_path) as f:
         LOG.debug('Reading file: {0}'.format(initial_path))
-        source1 = constants.COMMENT_RE.sub('', f.read())
+        source1 = COMMENT_RE.sub('', f.read())
 
     with open(new_path) as f:
         LOG.debug('Reading file: {0}'.format(new_path))
-        source2 = constants.COMMENT_RE.sub('', f.read())
+        source2 = COMMENT_RE.sub('', f.read())
 
-    return diff_strings(source1, source2, accurate_mode)
+    return diff_strings(source1, source2)
 

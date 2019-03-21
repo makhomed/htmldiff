@@ -37,15 +37,12 @@ To produce a diff of two html files::
 
 With custom output file::
 
-    $ htmldiff file1.html file2.html -o myfile.html
-    INFO: Diffing files...
-    INFO: Wrote file diff to /absolute/path/to/myfile.html
+    $ htmldiff file1.html file2.html -o diff_file.html
 
 All options:
 
- * -a --accurate-mode Use accurate mode instead of risky mode
  * -o --output-file OUTPUT_FILE [Optional] Specify a custom output file
  * -l --log-level (DEBUG,INFO,WARNING,ERROR,CRITICAL)
  * -L --log-file Location to place logging output
- * -V --version Print the application version and exit
- * -h --help  - Prints command line help
+ * -v --version Print the application version and exit
+ * -h --help Print command line help
