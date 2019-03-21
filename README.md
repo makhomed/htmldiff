@@ -1,6 +1,6 @@
 htmldiff
 ========
-HTML Diffing utility.
+Tool for diffing html files
 
 - Original is from [Ian Bicking](https://github.com/ianb)
 - Updates and improvements from [Richard Cyganiak](https://github.com/cygri)
@@ -43,4 +43,5 @@ All options:
 
  * -h print command line help
  * -v print application version and exit
- * -o OUTPUT_FILE Specify a custom output file
+ * -o OUTPUT_FILE specify a custom output file
+
