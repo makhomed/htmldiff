@@ -36,7 +36,7 @@ def diff():
     parser.add_argument('INPUT_FILE2')
     parser.add_argument(
         '-o',
-        '--output_file',
+        '--output-file',
         action='store',
         dest='out_fn',
         default=None,
