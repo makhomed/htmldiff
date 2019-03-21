@@ -12,7 +12,7 @@ import pkg_resources
 from os.path import abspath
 
 # Project
-from htmldiff.lib import diff_files, gen_side_by_side
+from htmldiff.lib import diff_files
 from htmldiff.logger import logging_init
 
 # Setup the version string
@@ -51,14 +51,6 @@ def diff():
         action='store_true'
     )
     parser.add_argument(
-        '-s',
-        '--side-by-side',
-        help='generate a side-by-side comparision instead of inline',
-        dest='side_by_side',
-        default=False,
-        action='store_true'
-    )
-    parser.add_argument(
         '-V',
         '--version',
         dest='version',
@@ -87,11 +79,6 @@ def diff():
     input_file2 = abspath(parsed_args.INPUT_FILE2)
     output_file = abspath(parsed_args.out_fn) if parsed_args.out_fn else None
     accurate_mode = parsed_args.accurate_mode
-    sbs = parsed_args.side_by_side
-    if sbs:
-        LOG.info('Selected side-by-side diff')
-    else:
-        LOG.info('Selected inline diff')
 
     if not os.path.exists(input_file1):
         LOG.error('Could not find: {0}'.format(input_file1))
@@ -112,8 +99,6 @@ def diff():
     LOG.info('Diffing files...')
     try:
         diffed_html = diff_files(input_file1, input_file2, accurate_mode)
-        if sbs:
-            diffed_html = gen_side_by_side(diffed_html)
     except Exception:
         LOG.exception('Diff process exited with an error')
         sys.exit(1)

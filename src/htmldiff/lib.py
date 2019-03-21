@@ -1,10 +1,9 @@
 """
 .. module:: htmldiff.htmldiff
-:synopsis: Utility to do inline and side-by-side diffs of html files.
-.. moduleauthor:: Ian Bicking, Brant Watson <brant.watson@propylon.com>
+:synopsis: Utility to do inline diffs of html files.
+.. moduleauthor:: Ian Bicking, Richard Cyganiak, Brant Watson
 """
 # Standard Imports
-import HTMLParser
 import logging
 from copy import copy
 from difflib import SequenceMatcher
@@ -16,7 +15,6 @@ import six
 from boltons.ioutils import SpooledBytesIO
 
 # Project
-from htmldiff.font_lookup import get_spacing
 from htmldiff import constants
 
 LOG = logging.getLogger(__name__)
@@ -30,45 +28,6 @@ def utf8_encode(val):
         return val
     else:
         raise TypeError('{} is not a unicode or str object'.format(val))
-
-
-def strip_tags(html_string):
-    """
-    Remove all HTML tags from a given string of html
-
-    :type html_string: string
-    :param html_string: string of html
-    :return: intial string stripped of html tags
-    """
-    LOG.debug('Stripping tags from "%s"', html_string)
-    st = TagStrip()
-    st.feed(html_string)
-    stripped = st.get_stripped_string()
-    return stripped
-
-
-def split_html(html_string):
-    """
-    Divides an html document into three seperate strings and returns
-    each of these. The first part is everything up to and including the
-    <body> tag. The next is everything inside of the body tags. The
-    third is everything outside of and including the </body> tag.
-
-    :type html_string: string
-    :param html_string: html document in string form
-    :returns: three strings start, body, and ending
-    """
-    LOG.debug('Splitting html into start, body, end...')
-    try:
-        i = html_string.index('<body')
-        j = html_string.index('>', i) + 1
-        k = html_string.index('</body')
-    except ValueError:
-        raise ValueError('This is not a full html document.')
-    start = html_string[:j]
-    body = html_string[j:k]
-    ending = html_string[k:]
-    return start, body, ending
 
 
 def is_junk(x):
@@ -113,21 +72,6 @@ class TagIter(object):
 
     def next(self):
         return self.__next__()
-
-
-class TagStrip(HTMLParser.HTMLParser):
-    """
-    Subclass of HTMLParser used to strip html tags from strings
-    """
-    def __init__(self):
-        self.reset()
-        self.fed = []
-
-    def handle_data(self, s):
-        self.fed.append(s)
-
-    def get_stripped_string(self):
-        return ''.join(self.fed)
 
 
 class HTMLMatcher(SequenceMatcher):
@@ -314,97 +258,3 @@ def diff_files(initial_path, new_path, accurate_mode):
 
     return diff_strings(source1, source2, accurate_mode)
 
-
-def whitespacegen(spaces):
-    """
-    From a certain number of spaces, provide an html entity for non breaking
-    spaces in an html document.
-
-    :type spaces: integer
-    :param spaces: Number of html space entities to return as string
-    :returns: string containing html space entities (&nbsp;) wrapped in
-              a html span that properly wraps the whitespace.
-    """
-    LOG.debug('Generating whitespace...')
-    # The average length of a word is 5 letters.. I guess
-    words = spaces / 5
-    s = '&nbsp;&nbsp;&nbsp;&nbsp; ' * int(words)
-
-    # s = " " * spaces
-    return '<span style="white-space: pre-wrap;">{0}</span>'.format(s)
-
-
-def span_to_whitespace(html_string, span):
-    """
-    Given an html string and a span tag name, parse the html and find
-    the document areas containing those pieces and then replace them
-    with nonbreaking whitespace html entities.
-
-    :type html_string: string
-    :param html_string: string of html to parse
-    :type span: string
-    :param string: the span class to parse for
-    :returns: html string with specified span replaced with whitespace
-    """
-    LOG.debug('Converting span to whitespace...')
-    start = '<span class="{0}">'.format(span)
-    stop = '</span>'
-    while True:
-        LOG.debug('Iterating html processing whitespace spans...')
-        try:
-            s = html_string.index(start)
-            f = html_string.index(stop, s) + 7
-        except ValueError:
-            # No more occurances of this span exist in the file.
-            break
-
-        strip = html_string[s:f]
-        stripped = strip_tags(strip)
-        chars = whitespacegen(get_spacing(stripped, 'times new roman'))
-        html_string = html_string.replace(strip, chars)
-    return html_string
-
-
-def gen_side_by_side(file_string):
-    """
-    Given an html file as a string, return a new html file with side by
-    side differences displayed in a single html file.
-
-    :type file_string: string
-    :param file_string: string of html to convert
-    :returns: string of html with side-by-side diffs
-    """
-    LOG.debug('Attempting to generate side-by-side diff from text.')
-    container_div = """<div id="container style="width: 100%;">"""
-
-    orig_div_start = ('<div id="left" style="clear: left; display: inline; '
-                      'float: left; width: 47%; border-right: 1px solid black;'
-                      ' padding: 10px;">')
-
-    new_div_start = ('<div id="right" style="float: right; width: 47%; '
-                     'display: inline; padding: 10px;">')
-    div_end = '</div>'
-    start, body, ending = split_html(file_string)
-    left_side = copy(body)
-    right_side = copy(body)
-    LOG.debug('Converting insert spans to whitespace...')
-    left = span_to_whitespace(left_side, 'insert')
-    LOG.debug('Converting delete spans to whitespace...')
-    right = span_to_whitespace(right_side, 'delete')
-
-    # Create side-by-side diff
-    sbs_diff = (
-        '%(start)s%(container)s%(orig_start)s%(left)s%(div_end)s%(new_start)s'
-        '%(right)s%(div_end)s%(ending)s' % {
-            'start': start,
-            'container': container_div,
-            'orig_start': orig_div_start,
-            'left': left,
-            'div_end': div_end,
-            'new_start': new_div_start,
-            'right': right,
-            'ending': ending
-
-        }
-    )
-    return sbs_diff
