@@ -1,7 +1,6 @@
 *.sqlite
 .coverage
 coverage.xml
-docs/build/
 pep8.out
 test_results.xml
 *.pyc
