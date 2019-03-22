@@ -71,7 +71,7 @@ def diff():
         sys.exit(1)
 
     if output_file is None:
-        sys.stdout.write(diffed_html)
+        sys.stdout.write(diffed_html.encode('UTF-8'))
     else:
         try:
             with codecs.open(output_file, 'w', encoding='UTF-8') as f:
