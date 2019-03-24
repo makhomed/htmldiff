@@ -4,7 +4,6 @@
 :synopsis: Utility to do inline diffs of html files.
 .. moduleauthor:: Ian Bicking, Richard Cyganiak, Brant Watson
 """
-# Standard Imports
 
 from __future__ import print_function
 from difflib import SequenceMatcher
@@ -12,12 +11,10 @@ from copy import copy
 
 import codecs
 import re
+import StringIO
 import sys
 
-# Boltons
-from boltons.ioutils import SpooledStringIO
 
-# Constants
 COMMENT_RE = re.compile(r'<!--.*?-->', re.S)
 TAG_RE = re.compile(r'<script.*?>.*?</script>|<.*?>', re.S)
 HEAD_RE = re.compile(r'<\s*head\s*>', re.S | re.I)
@@ -94,7 +91,7 @@ class HTMLMatcher(SequenceMatcher):
         opcodes = self.get_opcodes()
         a = self.a
         b = self.b
-        out = SpooledStringIO()
+        out = StringIO.StringIO()
         for tag, i1, i2, j1, j2 in opcodes:
             if tag == 'equal':
                 for item in a[i1:i2]:

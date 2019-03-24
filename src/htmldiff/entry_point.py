@@ -3,7 +3,6 @@ Entry Point
 -----------
 Command-line entry point
 """
-# Standard
 import argparse
 import codecs
 import os
@@ -12,8 +11,6 @@ import pkg_resources
 import sys
 import time
 import traceback
-
-# Project
 from htmldiff.lib import diff_files, eprint
 
 # Setup the version string
