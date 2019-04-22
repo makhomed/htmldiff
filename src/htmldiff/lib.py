@@ -20,7 +20,7 @@ TAG_RE = re.compile(r'<script.*?>.*?</script>|<.*?>', re.S)
 HEAD_RE = re.compile(r'<\s*head\s*>', re.S | re.I)
 WS_RE = re.compile(r'^([ \n\r\t]|&nbsp;)+$')
 WORD_RE = re.compile(
-    ur'''([^ \n\r\t,.&;:!?"«»/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;:!?"«»/#=<>()-])'''
+    ur'''([^ \n\r\t,.&;:!?"«»“”/#=<>()-]+|(?:[ \n\r\t]|&nbsp;)+|[,.&;:!?"«»“”/#=<>()-])'''
 )
 
 
