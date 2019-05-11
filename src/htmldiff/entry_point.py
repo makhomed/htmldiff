@@ -5,11 +5,11 @@ Command-line entry point
 """
 import argparse
 import codecs
+import datetime
 import os
 import os.path
 import pkg_resources
 import sys
-import time
 import traceback
 from htmldiff.lib import diff_files, eprint
 
@@ -79,13 +79,14 @@ def diff():
             sys.exit(1)
 
 def main():
-    start_time = time.time()
+    start = datetime.datetime.now()
     try:
         diff()
     except KeyboardInterrupt:
         eprint("\nOperation canceled by user\n")
         sys.exit(1)
-    eprint('Took {0:0.4f} seconds\n'.format(time.time() - start_time))
+    end = datetime.datetime.now()
+    eprint('Elapsed time '+str(end - start).split('.')[0]+'\n')
 
 if __name__ == '__main__':
     main()
